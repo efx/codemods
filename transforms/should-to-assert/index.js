@@ -22,6 +22,27 @@ module.exports = function transformer(file, api) {
     );
     j(p).replaceWith(newNode);
   };
+  root
+    .find(j.Identifier, {
+      name: 'should',
+    })
+    .filter((p) => {
+      return (
+        p.parent.parent.value.property.name === 'not' &&
+        p.parent.parent.parent.value.property.name === 'equal'
+      );
+      // return p.parentPath.parentPath.value.property.name === 'be';
+    })
+    .forEach((p) => {
+      const methodExp = j.memberExpression(j.identifier('assert'), j.identifier('notEqual'), false);
+
+      p.parent.parent.parent.parent.replace(
+        j.callExpression(methodExp, [
+          p.parent.value.object,
+          ...p.parent.parent.parent.parent.value.arguments,
+        ])
+      );
+    });
 
   root
     .find(j.ExpressionStatement, {

@@ -1,43 +1,10 @@
-# web-codemod
+# codemods
 
+## supported
 
-A collection of codemods for web-codemod.
+| should variant | qunit assert variant | 
+| ------ | ------ |
+| `aValue.should.be.true()` (false too) | `assert.true(aValue)` |
+| `aValue.should.equal(1)`, `should.eql(1)`  | `assert.equal(aValue, 1)` |
+| `aValue.should.not.equal(1)`  | `assert.notEqual(aValue, 1)` |
 
-## Usage
-
-To run a specific codemod from this project, you would run the following:
-
-```
-npx web-codemod <TRANSFORM NAME> path/of/files/ or/some**/*glob.js
-
-# or
-
-yarn global add web-codemod
-web-codemod <TRANSFORM NAME> path/of/files/ or/some**/*glob.js
-```
-
-## Local Usage
-```
-node ./bin/cli.js <TRANSFORM NAME> path/of/files/ or/some**/*glob.js
-```
-
-## Transforms
-
-<!--TRANSFORMS_START-->
-<!--TRANSFORMS_END-->
-
-## Contributing
-
-### Installation
-
-* clone the repo
-* change into the repo directory
-* `yarn`
-
-### Running tests
-
-* `yarn test`
-
-### Update Documentation
-
-* `yarn update-docs`
