@@ -1,15 +1,12 @@
 const { getParser } = require('codemod-cli').jscodeshift;
-const shouldToAssert = new Map([['eql', 'equal']]);
 module.exports = function transformer(file, api) {
   const j = getParser(api);
   const root = j(file.source);
 
   const replaceExpression = (p) => {
-    // should.equal()
-    const method = p.value.expression.callee.property.name;
     const methodExp = j.memberExpression(
       j.identifier('assert'),
-      j.identifier(shouldToAssert.get(method) || method),
+      j.identifier(p.value.expression.callee.property.name),
       false
     );
     let expr = p.value.expression.callee.object.object;
@@ -31,7 +28,6 @@ module.exports = function transformer(file, api) {
         p.parent.parent.value.property.name === 'not' &&
         p.parent.parent.parent.value.property.name === 'equal'
       );
-      // return p.parentPath.parentPath.value.property.name === 'be';
     })
     .forEach((p) => {
       const methodExp = j.memberExpression(j.identifier('assert'), j.identifier('notEqual'), false);
@@ -45,22 +41,25 @@ module.exports = function transformer(file, api) {
     });
 
   root
-    .find(j.ExpressionStatement, {
-      expression: {
-        type: 'CallExpression',
-        callee: {
-          type: 'MemberExpression',
-          object: {
-            type: 'MemberExpression',
-            property: {
-              type: 'Identifier',
-              name: 'should',
-            },
-          },
-        },
-      },
+    .find(j.Identifier, {
+      name: 'should',
     })
-    .forEach(replaceExpression);
+    .filter((p) => {
+      return (
+        p.parent.parent.value.property.name === 'equal' ||
+        p.parent.parent.value.property.name === 'eql'
+      );
+    })
+    .forEach((p) => {
+      const methodExp = j.memberExpression(j.identifier('assert'), j.identifier('equal'), false);
+
+      p.parent.parent.parent.replace(
+        j.callExpression(methodExp, [
+          p.parent.value.object,
+          ...p.parent.parent.parent.value.arguments,
+        ])
+      );
+    });
 
   root
     .find(j.ExpressionStatement, {
