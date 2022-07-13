@@ -25,7 +25,7 @@ module.exports = function transformer(file, api) {
     })
     .filter((p) => {
       return (
-        p.parent.parent.value.property.name === 'not' &&
+        p.parent.parent.value.property?.name === 'not' &&
         p.parent.parent.parent.value.property.name === 'equal'
       );
     })
@@ -46,8 +46,25 @@ module.exports = function transformer(file, api) {
     })
     .filter((p) => {
       return (
-        p.parent.parent.value.property.name === 'equal' ||
-        p.parent.parent.value.property.name === 'eql'
+        p.parent.value.property?.name === 'not' && p.parent.parent.value.property.name === 'exist'
+      );
+    })
+    .forEach((p) => {
+      const methodExp = j.memberExpression(j.identifier('assert'), j.identifier('notOk'), false);
+
+      p.parent.parent.parent.replace(
+        j.callExpression(methodExp, [...p.parent.parent.parent.value.arguments])
+      );
+    });
+
+  root
+    .find(j.Identifier, {
+      name: 'should',
+    })
+    .filter((p) => {
+      return (
+        p.parent.parent.value.property?.name === 'equal' ||
+        p.parent.parent.value.property?.name === 'eql'
       );
     })
     .forEach((p) => {
@@ -59,6 +76,19 @@ module.exports = function transformer(file, api) {
           ...p.parent.parent.parent.value.arguments,
         ])
       );
+    });
+
+  root
+    .find(j.Identifier, {
+      name: 'should',
+    })
+    .filter((p) => {
+      return p.parent.value.property?.name === 'exist';
+    })
+    .forEach((p) => {
+      const methodExp = j.memberExpression(j.identifier('assert'), j.identifier('ok'), false);
+
+      p.parent.parent.replace(j.callExpression(methodExp, [...p.parent.parent.value.arguments]));
     });
 
   root
