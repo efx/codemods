@@ -92,6 +92,32 @@ module.exports = function transformer(file, api) {
     });
 
   root
+    .find(j.Identifier, {
+      name: 'should',
+    })
+    .filter((p) => {
+      return p.parent.parent.value.property?.name === 'match';
+    })
+    .forEach((p) => {
+      const methodExp = j.memberExpression(j.identifier('assert'), j.identifier('ok'), false);
+
+      p.parent.parent.parent.replace(
+        j.callExpression(methodExp, [
+          j.callExpression(
+            j.memberExpression(
+              // 'some stirng'
+              p.parent.value.object,
+              // match
+              p.parent.parent.parent.value.callee.property,
+              false
+            ),
+            [...p.parent.parent.parent.value.arguments]
+          ),
+        ])
+      );
+    });
+
+  root
     .find(j.ExpressionStatement, {
       expression: {
         type: 'CallExpression',
